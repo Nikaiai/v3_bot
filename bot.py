@@ -38,7 +38,6 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
-
 ADD_ITEM_CATEGORY, ADD_ITEM_NAME, ADD_ITEM_DESC, ADD_ITEM_PRICE = range(4)
 
 

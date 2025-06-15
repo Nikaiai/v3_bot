@@ -1,19 +1,9 @@
-# keyboards.py
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from database import get_db, Category, Order, OrderStatus
-from utils import is_cafe_open  # Убедитесь, что у вас есть файл utils.py
-
-
-# ================================================================
-# КЛАВИАТУРЫ ГЛАВНОГО И АДМИНСКОГО МЕНЮ
-# ================================================================
+from utils import is_cafe_open
 
 
 def main_menu_keyboard(is_admin: bool = False):
-    """
-    Генерирует главное меню.
-    Добавляет кнопку возврата в админ-панель, если is_admin=True.
-    """
     keyboard = [
         [InlineKeyboardButton("🍽️ Показать меню", callback_data="show_menu")],
         [InlineKeyboardButton("🛒 Корзина", callback_data="cart")],
@@ -25,7 +15,6 @@ def main_menu_keyboard(is_admin: bool = False):
 
 
 def admin_menu_keyboard():
-    """Генерирует главное меню для администратора."""
     db = next(get_db())
     new_orders_count = db.query(Order).filter(Order.status == OrderStatus.NEW).count()
     db.close()
@@ -41,24 +30,15 @@ def admin_menu_keyboard():
     return InlineKeyboardMarkup(keyboard)
 
 
-# ================================================================
-# ОСНОВНАЯ КЛАВИАТУРА МЕНЮ (С ПОДДЕРЖКОЙ ПОДКАТЕГОРИЙ)
-# ================================================================
-
 def menu_keyboard(category_id=None):
-    """
-    Генерирует клавиатуру для навигации по меню с подкатегориями.
-    """
     db = next(get_db())
     if category_id is None:
-        # Показываем родительские категории
         categories = db.query(Category).filter(Category.parent_id.is_(None)).all()
         keyboard = [[InlineKeyboardButton(cat.name, callback_data=f"category_{cat.id}")] for cat in categories]
         keyboard.append([InlineKeyboardButton("⬅️ В главное меню", callback_data="start")])
     else:
         current_category = db.query(Category).get(category_id)
         keyboard = []
-        # Показываем подкатегории или товары
         if current_category.subcategories:
             for sub in current_category.subcategories:
                 keyboard.append([InlineKeyboardButton(sub.name, callback_data=f"category_{sub.id}")])
@@ -67,7 +47,6 @@ def menu_keyboard(category_id=None):
                 keyboard.append(
                     [InlineKeyboardButton(f"{item.name} ({item.price} руб.)", callback_data=f"item_{item.id}")])
 
-        # Кнопка "Назад"
         if current_category.parent_id is None:
             keyboard.append([InlineKeyboardButton("⬅️ Назад", callback_data="show_menu")])
         else:
@@ -78,7 +57,6 @@ def menu_keyboard(category_id=None):
 
 
 def item_details_keyboard(item_id: int, quantity: int = 1, is_admin: bool = False):
-    """Клавиатура для страницы товара с выбором количества."""
     if quantity < 1: quantity = 1
 
     keyboard = [
@@ -88,7 +66,6 @@ def item_details_keyboard(item_id: int, quantity: int = 1, is_admin: bool = Fals
             InlineKeyboardButton("➕", callback_data=f"item_incr_{item_id}_{quantity + 1}")
         ]
     ]
-    # Показываем кнопку добавления, только если кафе открыто или если это админ
     if is_cafe_open() or is_admin:
         keyboard.append([InlineKeyboardButton(f"🛒 Добавить в корзину ({quantity})",
                                               callback_data=f"cart_add_many_{item_id}_{quantity}")])
@@ -97,14 +74,8 @@ def item_details_keyboard(item_id: int, quantity: int = 1, is_admin: bool = Fals
     return InlineKeyboardMarkup(keyboard)
 
 
-# ================================================================
-# КЛАВИАТУРЫ КОРЗИНЫ И ЗАКАЗОВ
-# ================================================================
-
 def cart_actions_keyboard():
-    """Клавиатура для действий в корзине."""
     keyboard = []
-    # Показываем кнопку оформления только в рабочее время
     if is_cafe_open():
         keyboard.append([InlineKeyboardButton("✅ Перейти к оформлению", callback_data="place_order")])
 
@@ -116,19 +87,13 @@ def cart_actions_keyboard():
 
 
 def confirm_order_keyboard():
-    """Клавиатура подтверждения заказа."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("👍 Подтвердить заказ", callback_data="confirm_order")],
         [InlineKeyboardButton("⬅️ Вернуться в корзину", callback_data="cart")]
     ])
 
 
-# ================================================================
-# КЛАВИАТУРЫ ДЛЯ АДМИНИСТРАТОРА
-# ================================================================
-
 def admin_order_keyboard(order_id):
-    """Клавиатура для управления конкретным заказом."""
     keyboard = [
         [InlineKeyboardButton("✔️ Готовится", callback_data=f"admin_status_{order_id}_{OrderStatus.IN_PROGRESS}")],
         [InlineKeyboardButton("✅ Готов к выдаче", callback_data=f"admin_status_{order_id}_{OrderStatus.READY}")],
@@ -140,7 +105,6 @@ def admin_order_keyboard(order_id):
 
 
 def cancel_keyboard():
-    """Клавиатура для отмены действия (например, в диалоге)."""
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("❌ Отмена", callback_data="cancel_action")]
     ])
