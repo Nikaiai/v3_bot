@@ -104,7 +104,8 @@ async def render_cart(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 item_total = quantity * item.price
                 total_price += item_total
                 safe_name = escape_markdown(item.name)
-                text += f"▪️ *{safe_name}*\n_{escape_markdown(quantity)} шт\\. x {escape_markdown(item.price)} руб\\. \\= {escape_markdown(item_total)} руб\\._\n"
+                text += f"▪️ *{safe_name}*\n_{escape_markdown(quantity)} шт\\. x {escape_markdown(item.price)}" \
+                        f" руб\\. \\= {escape_markdown(item_total)} руб\\._\n"
 
         text += f"\n💰 *Итого:* {escape_markdown(total_price)} руб\\."
         await query.edit_message_text(
